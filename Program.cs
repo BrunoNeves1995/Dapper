@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Data.SqlClient;
 
 namespace Dapper 
 {
@@ -6,7 +7,19 @@ namespace Dapper
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            const string conectString
+            = @"Server=TERMINAL01\SQLEXPRESS;Database=Balta;User ID=admin;Password=12345;Trusted_Connection=false;TrustServerCertificate=true";
+
+
+            var connection = new SqlConnection(conectString);
+            connection.Open();
+              
+              
+
+
+            
+            connection.Close();
+            Console.ReadKey();
         }
     }
 }
