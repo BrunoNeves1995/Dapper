@@ -30,8 +30,6 @@ namespace Dapper
                 }
             }   
 
-
-            
             connection.Close();
            
         }
