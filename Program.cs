@@ -1,7 +1,8 @@
 ﻿using System;
+using Dapper.Models;
 using Microsoft.Data.SqlClient;
 
-namespace Dapper 
+namespace Dapper
 {
     internal class Program
     {
@@ -11,27 +12,38 @@ namespace Dapper
             = @"Server=TERMINAL01\SQLEXPRESS;Database=Balta;User ID=admin;Password=12345;Trusted_Connection=false;TrustServerCertificate=true";
 
 
-            var connection = new SqlConnection(conectString);
-            connection.Open();
-            Console.WriteLine("Conectado ao banco");
+            using (var connection = new SqlConnection(conectString))
+            {   connection.Open();
+                Console.WriteLine("Conectado ao banco");
 
-            using (var command = new SqlCommand())  
-            {
-                command.Connection = connection;
-                command.CommandType = System.Data.CommandType.Text;
-                command.CommandText = "SELECT [Id], [Title] FROM [Category]";
-
-                // Executa o  command.CommandText
-                var reader = command.ExecuteReader();
-
-                while (reader.Read())
+                using (var command = new SqlCommand())
                 {
-                    Console.WriteLine($"id: {reader.GetGuid(0)}, title: {reader.GetString(1)}");
-                }
-            }   
+                    command.Connection = connection;
+                    command.CommandType = System.Data.CommandType.Text;
+                    command.CommandText = "SELECT [Id], [Title] FROM [Category] ORDER BY 2";
 
-            connection.Close();
-           
+                    // Executa o  command.CommandText
+                    var reader = command.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        var category = new Category
+                        (
+                            reader.GetGuid(0),
+                            reader.GetString(1)
+                        );
+
+                        Console.WriteLine($"id: {category.Id}, title: {category.Title}");
+                    }
+                }
+
+                connection.Close();
+            }
+
+
+
+
+
         }
     }
 }
