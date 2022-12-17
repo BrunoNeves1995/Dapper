@@ -45,12 +45,12 @@ namespace Dapper
 
                         // insert 
                         var insertSql = @$"INSERT INTO 
-                    [Category]
-                        VALUES
-                        (  
-                            @Id,  @Title, @Url,  @Summary, @Order, @Description, @Featured
+                        [Category]
+                            VALUES
+                            (  
+                                @Id,  @Title, @Url,  @Summary, @Order, @Description, @Featured
 
-                        )";
+                            )";
 
                         command.Parameters.AddWithValue("@Id", categoryInert.Id);
                         command.Parameters.AddWithValue("@Title", categoryInert.Title);
@@ -66,7 +66,7 @@ namespace Dapper
                         var selectSql = "SELECT [Id], [Title] FROM [Category] WHERE Id = @Id ORDER BY 2";
                         command.CommandText = selectSql;
                         SqlDataReader reader = command.ExecuteReader();
-
+                        
     
                         while (reader.Read())
                         {
@@ -76,16 +76,15 @@ namespace Dapper
                             category.Title = reader.GetString(1);
                             Console.WriteLine($"Registro atualizado, id: {category.Id}, title: {category.Title}");
                         }
-                        gitreader.Close();
+                        reader.Close();
+                        transaction.Commit();
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"E501 - Erro ao cadastrar categoria, as operações serão todas desfeitas.");
                         Console.WriteLine($"Mensagem: {ex.Message}");
                         transaction.Rollback();
-                        conexao.FecharConexao();
                     }
-                    transaction.Commit();
                     conexao.FecharConexao();
                 }
 
