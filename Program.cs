@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data;
+using Dapper.Database;
 using Dapper.Models;
 using Microsoft.Data.SqlClient;
 
@@ -8,41 +10,83 @@ namespace Dapper
     {
         static void Main(string[] args)
         {
-            const string conectString
-            = @"Server=TERMINAL01\SQLEXPRESS;Database=Balta;User ID=admin;Password=12345;Trusted_Connection=false;TrustServerCertificate=true";
 
+            var categoryInert = new Category();
 
-            using (var connection = new SqlConnection(conectString))
-            {   connection.Open();
-                Console.WriteLine("Conectado ao banco");
+            categoryInert.Id = Guid.NewGuid();
+            categoryInert.Title = "Java";
+            categoryInert.Url = "Java";
+            categoryInert.Description = "Categoria de serviços da Java";
+            categoryInert.Order = 12;
+            categoryInert.Summary = "Java";
+            categoryInert.Featured = false;
 
-                using (var command = new SqlCommand())
+            IConexao conexao = new Conexao();
+            SqlCommand command;
+            SqlDataReader reader;
+
+            var insertSql = @$"INSERT INTO 
+                    [Category]
+                        VALUES
+                        (   
+                            @Id,
+                            @Title,
+                            @Url,
+                            @Summary,
+                            @Order,
+                            @Description,
+                            @Featured
+                        )";
+
+            
+            try
+            {   
+                command = new SqlCommand(insertSql, conexao.AbrirConexao());
+                command.Parameters.AddWithValue("@Id", categoryInert.Id);
+                command.Parameters.AddWithValue("@Title", categoryInert.Title);
+                command.Parameters.AddWithValue("@Url", categoryInert.Url);
+                command.Parameters.AddWithValue("@Summary", categoryInert.Summary);
+                command.Parameters.AddWithValue("@Order", categoryInert.Order);
+                command.Parameters.AddWithValue("@Description", categoryInert.Description);
+                command.Parameters.AddWithValue("@Featured", categoryInert.Featured);
+                var linhaAfetadas = command.ExecuteNonQuery();
+                Console.WriteLine($"Linhas afetadas -  {linhaAfetadas}");
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"E501 - Erro ao cadastrar categoria");
+                Console.WriteLine($"Mensagem: {ex.Message}");
+            }
+
+            var selectSql = "SELECT [Id], [Title] FROM [Category] ORDER BY 2";
+            
+
+            try
+            {   
+                command = new SqlCommand(selectSql, conexao.AbrirConexao());
+                reader = command.ExecuteReader();
+                while (reader.Read())
                 {
-                    command.Connection = connection;
-                    command.CommandType = System.Data.CommandType.Text;
-                    command.CommandText = "SELECT [Id], [Title] FROM [Category] ORDER BY 2";
+                    var categorySelect = new Category();
 
-                    // Executa o  command.CommandText
-                    var reader = command.ExecuteReader();
+                    categorySelect.Id = reader.GetGuid(0);
+                    categorySelect.Title = reader.GetString(1);
 
-                    while (reader.Read())
-                    {
-                        var category = new Category
-                        (
-                            reader.GetGuid(0),
-                            reader.GetString(1)
-                        );
-
-                        Console.WriteLine($"id: {category.Id}, title: {category.Title}");
-                    }
+                    Console.WriteLine($"id: {categorySelect.Id}, title: {categorySelect.Title}");
                 }
+                reader.Close();
+            }
+            catch (Exception ex)
+            {
 
-                connection.Close();
+                Console.WriteLine($"E502 - Erro ao buscar categoria");
+                Console.WriteLine($"Mensagem: {ex.Message}");
             }
 
 
 
-
+            conexao.FecharConexao();
 
         }
     }
