@@ -10,7 +10,14 @@ namespace Dapper
     {
         static void Main(string[] args)
         {
+            // cadastrarCategoria();
+            ListarCategorias();
 
+        }
+
+
+        static void cadastrarCategoria()
+        {
             var categoryInert = new Category();
 
             categoryInert.Id = Guid.NewGuid();
@@ -56,7 +63,7 @@ namespace Dapper
                         // select
                         var selectSql = "SELECT [Id], [Title] FROM [Category] WHERE Id = @Id ORDER BY 2";
                         command.CommandText = selectSql;
-                        var reader = command.ExecuteReader();
+                        SqlDataReader reader = command.ExecuteReader();
 
                         while (reader.Read())
                         {
@@ -70,7 +77,7 @@ namespace Dapper
                     catch (System.Exception ex)
                     {
 
-                        Console.WriteLine($"Erro ao cadastrar categoria");
+                        Console.WriteLine($"E501 - Erro ao cadastrar categoria");
                         Console.WriteLine($"Mensagem: {ex.Message}");
                     }
                     conexao.FecharConexao();
@@ -79,6 +86,46 @@ namespace Dapper
             }
 
         }
+
+        static void ListarCategorias()
+        {
+            IConexao conexao = new Conexao();
+
+            using (var con = conexao.AbrirConexao())
+            {
+                using (SqlCommand command = new SqlCommand())
+                {
+                    command.Connection = con;
+                    try
+                    {
+                        var selectSql = "SELECT [Id], [Title], [Featured] FROM [Category] ORDER BY [Order]";
+                        command.CommandText = selectSql;
+                        SqlDataReader reader = command.ExecuteReader();
+                        
+
+                        while (reader.Read())
+                        {
+                            var categoria = new Category();
+
+                            categoria.Id = reader.GetGuid(0);
+                            categoria.Title = reader.GetString(1);
+                            categoria.Featured = reader.GetBoolean(2);
+                            Console.WriteLine($"id: {categoria.Id}, Titulo: {categoria.Title}, Faturado: {categoria.Featured}");
+                        }
+
+                    }
+                    catch (System.Exception ex)
+                    {
+
+                        Console.WriteLine($"E502 - Erro ao buscar as categorias");
+                        Console.WriteLine($"Mensagem: {ex.Message}");
+                    }
+                }
+                conexao.FecharConexao();
+            }
+        }
+
+
     }
 
 }
