@@ -10,8 +10,9 @@ namespace Dapper
     {
         static void Main(string[] args)
         {
-            // cadastrarCategoria();
-            ListarCategorias();
+            cadastrarCategoria();
+            // ListarCategorias();
+            // AtualizarUmaCategoria();
 
         }
 
@@ -21,20 +22,23 @@ namespace Dapper
             var categoryInert = new Category();
 
             categoryInert.Id = Guid.NewGuid();
-            categoryInert.Title = "Java";
-            categoryInert.Url = "Java";
-            categoryInert.Description = "Categoria de serviços da Java";
-            categoryInert.Order = 13;
-            categoryInert.Summary = "Java";
-            categoryInert.Featured = false;
+            categoryInert.Title = "trasaction";
+            categoryInert.Url = "trasaction";
+            categoryInert.Description = "Categoria de serviços da trasaction";
+            categoryInert.Order = 15;
+            categoryInert.Summary = "trasaction";
+            categoryInert.Featured = true;
 
             IConexao conexao = new Conexao();
+            SqlTransaction transaction;
 
             using (var conn = conexao.AbrirConexao())
             {
                 using (SqlCommand command = new SqlCommand())
                 {
                     command.Connection = conn;
+                    transaction = conn.BeginTransaction();
+                    command.Transaction = transaction;
 
                     try
                     {
@@ -58,28 +62,30 @@ namespace Dapper
 
                         command.CommandText = insertSql;
                         var linhasAfetadas = command.ExecuteNonQuery();
-                        Console.WriteLine($"{linhasAfetadas} registr afetas");
-
                         // select
                         var selectSql = "SELECT [Id], [Title] FROM [Category] WHERE Id = @Id ORDER BY 2";
                         command.CommandText = selectSql;
                         SqlDataReader reader = command.ExecuteReader();
 
+    
                         while (reader.Read())
                         {
                             var category = new Category();
 
                             category.Id = reader.GetGuid(0);
                             category.Title = reader.GetString(1);
-                            Console.WriteLine($"id: {category.Id}, title: {category.Title}");
+                            Console.WriteLine($"Registro atualizado, id: {category.Id}, title: {category.Title}");
                         }
+                        gitreader.Close();
                     }
-                    catch (System.Exception ex)
+                    catch (Exception ex)
                     {
-
-                        Console.WriteLine($"E501 - Erro ao cadastrar categoria");
+                        Console.WriteLine($"E501 - Erro ao cadastrar categoria, as operações serão todas desfeitas.");
                         Console.WriteLine($"Mensagem: {ex.Message}");
+                        transaction.Rollback();
+                        conexao.FecharConexao();
                     }
+                    transaction.Commit();
                     conexao.FecharConexao();
                 }
 
@@ -125,6 +131,70 @@ namespace Dapper
             }
         }
 
+
+        static void AtualizarUmaCategoria()
+        {
+            IConexao conexao = new Conexao();
+            SqlTransaction trans;
+           
+            using (var con = conexao.AbrirConexao())
+            {   
+                ;  
+                using (SqlCommand command = new SqlCommand())
+                {   
+                    
+                    command.Connection = con;
+                    trans = con.BeginTransaction();
+                    command.Transaction = trans;
+
+                    var categoria = new Category();
+                    categoria.Featured = true;
+
+                    categoria.Id = new Guid("09ce0b7b-cfca-497b-92c0-3290ad9d5142");
+                    try
+                    {   
+                        var selectSql = "SELECT [Id] FROM [Category] WHERE Id = @Id";
+                        
+                        command.Parameters.AddWithValue("@Id", categoria.Id);
+                        
+                        command.CommandText = selectSql;
+                        SqlDataReader reader = command.ExecuteReader();
+
+                        while (reader.Read())
+                        {
+                            var category = new Category();
+
+                            category.Id = reader.GetGuid(0);
+                            Console.WriteLine($"Id: {categoria.Id}");
+                        }
+                        reader.Close();
+
+                        var updateSql = @"
+                        UPDATE [Balta].[dbo].[Category] 
+                            SET [Featured] = @Featured 
+                        WHERE 
+                            [Id] = @Id";
+
+                        
+                        command.Parameters.AddWithValue("@Featured", categoria.Featured);
+
+                        command.CommandText = updateSql;
+                        var linhasAfetadas = command.ExecuteNonQuery();
+                        
+                        Console.WriteLine($"{linhasAfetadas} registro atualizado");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Console.WriteLine($"E502 - Erro ao Atualizar registro");
+                        Console.WriteLine($"Mensagem: {ex.Message}");
+                        trans.Rollback();
+
+                    }
+                }
+                trans.Commit();
+                conexao.FecharConexao();
+            }
+        }
 
     }
 
